@@ -41,13 +41,12 @@ const App = () => {
         }
         requestAnimationFrame(raf);
 
-        // THREE.JS WAVE SCENE
+        // THREE.JS WAVE SCENE - EXACTLY LIKE HTML
         const scene = new THREE.Scene();
         scene.background = null;
         
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 12, 40);
-        camera.lookAt(0, 0, 0);
         
         const renderer = new THREE.WebGLRenderer({ 
           antialias: true, 
@@ -65,7 +64,7 @@ const App = () => {
           canvasRef.current.appendChild(renderer.domElement);
         }
 
-        // Create the wave plane - original settings, just moved down
+        // Create the wave plane - EXACT HTML SETTINGS
         const geometry = new THREE.PlaneGeometry(120, 120, 100, 100);
         const material = new THREE.MeshBasicMaterial({ 
           color: 0x00f2ff, 
@@ -75,9 +74,8 @@ const App = () => {
         });
         const plane = new THREE.Mesh(geometry, material);
         
-        // ONLY CHANGE: Move it down a bit
-        plane.position.y = -10; // Just a little down from original (was 0)
-        plane.rotation.x = -Math.PI / 2.2; // Back to original rotation
+        // HTML SETTINGS - NO position change (default is 0)
+        plane.rotation.x = -Math.PI / 2.2; // Same rotation as HTML
         
         scene.add(plane);
 
@@ -85,7 +83,7 @@ const App = () => {
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
           
-          // Wave animation - original
+          // Wave animation - HTML version
           const time = Date.now() * 0.0004;
           const pos = plane.geometry.attributes.position.array;
           for (let i = 0; i < pos.length; i += 3) {
