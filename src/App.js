@@ -65,29 +65,55 @@ const App = () => {
           canvasRef.current.appendChild(renderer.domElement);
         }
 
-        // Create the wave plane
-        const geometry = new THREE.PlaneGeometry(120, 120, 100, 100);
+        // Create the wave plane - positioned lower
+        const geometry = new THREE.PlaneGeometry(140, 140, 120, 120); // Slightly larger and more segments
         const material = new THREE.MeshBasicMaterial({ 
           color: 0x00f2ff, 
           wireframe: true, 
           transparent: true, 
-          opacity: 0.1
+          opacity: 0.15 // Slightly increased opacity
         });
         const plane = new THREE.Mesh(geometry, material);
-        plane.rotation.x = -Math.PI / 2.2;
+        
+        // Position the plane lower - adjust Y position and rotation
+        plane.position.y = -5; // Move it down
+        plane.rotation.x = -Math.PI / 2.5; // Slightly steeper angle
+        plane.rotation.z = 0.1; // Slight rotation for better visual
+        
         scene.add(plane);
+
+        // Add a subtle second layer for depth
+        const geometry2 = new THREE.PlaneGeometry(160, 160, 80, 80);
+        const material2 = new THREE.MeshBasicMaterial({ 
+          color: 0x00f2ff, 
+          wireframe: true, 
+          transparent: true, 
+          opacity: 0.05
+        });
+        const plane2 = new THREE.Mesh(geometry2, material2);
+        plane2.position.y = -8; // Even lower
+        plane2.rotation.x = -Math.PI / 2.8;
+        plane2.rotation.z = -0.05;
+        scene.add(plane2);
 
         let animationFrameId;
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
           
-          // Wave animation
+          // Wave animation for first plane
           const time = Date.now() * 0.0004;
           const pos = plane.geometry.attributes.position.array;
           for (let i = 0; i < pos.length; i += 3) {
-            pos[i + 2] = Math.sin(pos[i] * 0.1 + time) * 2 + Math.cos(pos[i + 1] * 0.1 + time) * 2;
+            pos[i + 2] = Math.sin(pos[i] * 0.08 + time) * 2.5 + Math.cos(pos[i + 1] * 0.08 + time) * 2.5;
           }
           plane.geometry.attributes.position.needsUpdate = true;
+          
+          // Wave animation for second plane (slightly different speed)
+          const pos2 = plane2.geometry.attributes.position.array;
+          for (let i = 0; i < pos2.length; i += 3) {
+            pos2[i + 2] = Math.sin(pos2[i] * 0.06 + time * 0.8) * 3 + Math.cos(pos2[i + 1] * 0.06 + time * 0.8) * 3;
+          }
+          plane2.geometry.attributes.position.needsUpdate = true;
           
           renderer.render(scene, camera);
         };
@@ -207,6 +233,8 @@ const App = () => {
           renderer.dispose();
           geometry.dispose();
           material.dispose();
+          geometry2.dispose();
+          material2.dispose();
         };
 
       } catch (err) {
