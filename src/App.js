@@ -1,10 +1,32 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 const App = () => {
   const canvasRef = useRef(null);
   const heroTitleRef = useRef(null);
   const marqueeRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+
+  useEffect(() => {
+    // Simulate loading progress
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 10;
+      if (progress >= 100) {
+        progress = 100;
+        setLoadingProgress(100);
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
+        clearInterval(interval);
+      }
+      setLoadingProgress(Math.min(progress, 100));
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Helper to load external scripts
@@ -222,244 +244,331 @@ const App = () => {
   }, []);
 
   return (
-    <div className="text-white font-sans selection:bg-cyan-500 selection:text-black">
-      <style>{`
-        :root {
-          --neon-blue: #00f2ff;
-          --neon-pink: #ff007a;
-        }
-
-        .font-sync {
-          font-family: 'Syncopate', sans-serif;
-        }
-
-        body {
-          margin: 0;
-          padding: 0;
-          background-color: #050505;
-        }
-
-        #canvas-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 0;
-          pointer-events: none;
-        }
-
-        #canvas-container canvas {
-          display: block;
-          width: 100%;
-          height: 100%;
-        }
-
-        nav, section, footer {
-          position: relative;
-          z-index: 1;
-        }
-
-        .glass-panel {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        #hero-title span {
-          display: inline-block;
-          transform: translateY(110%);
-        }
-
-        .neon-glow {
-          text-shadow: 0 0 15px var(--neon-blue);
-        }
-
-        .reveal-box {
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .reveal-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: var(--neon-blue);
-          transform: scaleX(0);
-          transform-origin: left;
-          z-index: 10;
-        }
-
-        .parallax-text {
-          white-space: nowrap;
-          font-size: 15vw;
-          line-height: 1;
-          opacity: 0.05;
-          pointer-events: none;
-        }
-
-        .carousel-container {
-          position: relative;
-          height: 1.2em;
-          display: inline-block;
-          vertical-align: top;
-          overflow: hidden;
-        }
-        
-        .carousel-word {
-          position: absolute;
-          white-space: nowrap;
-          left: 0;
-          top: 0;
-          opacity: 0;
-        }
-
-        .char {
-          display: inline-block;
-          transform: translateY(100%);
-        }
-      `}</style>
-
-      <div id="canvas-container" ref={canvasRef}></div>
-
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full p-6 md:p-10 flex justify-between items-center z-50">
-        <div className="font-sync text-xl tracking-tighter neon-glow">ELLEN_DEV</div>
-        <div className="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.3em] font-bold opacity-50">
-          <a href="#work" className="hover:opacity-100 transition-opacity">Artifacts</a>
-          <a href="#about" className="hover:opacity-100 transition-opacity">Philosophy</a>
-          <a href="#contact" className="hover:opacity-100 transition-opacity">Contact</a>
-        </div>
-        <div className="text-[10px] uppercase tracking-widest opacity-50">Available for 2024</div>
-      </nav>
-
-      {/* Hero */}
-      <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
-        <div className="text-center z-10 px-6">
-          <div className="overflow-hidden mb-2">
-            <span className="block text-[10px] tracking-[0.5em] uppercase opacity-0 font-sync" id="hero-top">Fullstack Creative</span>
+    <>
+      {/* Loading Screen */}
+      {loading && (
+        <div className="fixed inset-0 bg-[#050505] z-[100] flex flex-col items-center justify-center">
+          <div className="font-sync text-8xl md:text-9xl text-cyan-400 mb-8 neon-glow">
+            {Math.floor(loadingProgress)}%
           </div>
-          <h1 className="font-sync text-6xl md:text-[9vw] leading-none mb-8 overflow-hidden" id="hero-title" ref={heroTitleRef}>
-            ELLEN
-          </h1>
+          <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-cyan-400 rounded-full transition-all duration-300"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+          <div className="mt-8 font-sync text-xs tracking-[0.3em] opacity-50">
+            LOADING EXPERIENCE
+          </div>
+        </div>
+      )}
+
+      {/* About Modal */}
+      {showAboutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowAboutModal(false)}></div>
+          <div className="relative glass-panel max-w-2xl w-full p-8 md:p-12 rounded-2xl animate-fadeIn">
+            <button 
+              onClick={() => setShowAboutModal(false)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white text-2xl"
+            >
+              ✕
+            </button>
+            <h3 className="font-sync text-3xl md:text-4xl mb-6">
+              <span className="text-cyan-400">●</span> MORE ABOUT ME
+            </h3>
+            <div className="space-y-4 text-white/80">
+              <p className="text-lg leading-relaxed">
+                I'm a 18-year-old creative developer with a passion for blending technology and art. 
+                My journey started with a curiosity for how things work, which evolved into a deep love 
+                for creating immersive digital experiences.
+              </p>
+              <p className="text-lg leading-relaxed">
+                I specialize in building performant web applications with smooth animations and 
+                engaging 3D visuals. Every line of code is a step toward pushing the boundaries 
+                of what's possible on the web.
+              </p>
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                <div className="glass-panel p-4">
+                  <div className="text-cyan-400 font-sync text-xl">5+</div>
+                  <div className="text-xs opacity-50">Projects Completed</div>
+                </div>
+                <div className="glass-panel p-4">
+                  <div className="text-pink-500 font-sync text-xl">∞</div>
+                  <div className="text-xs opacity-50">Hours of Learning</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="text-white font-sans selection:bg-cyan-500 selection:text-black">
+        <style>{`
+          :root {
+            --neon-blue: #00f2ff;
+            --neon-pink: #ff007a;
+          }
+
+          .font-sync {
+            font-family: 'Syncopate', sans-serif;
+          }
+
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+          }
+
+          #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+          }
+
+          #canvas-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
+
+          nav, section, footer {
+            position: relative;
+            z-index: 1;
+          }
+
+          .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          }
+
+          #hero-title span {
+            display: inline-block;
+            transform: translateY(110%);
+          }
+
+          .neon-glow {
+            text-shadow: 0 0 15px var(--neon-blue);
+          }
+
+          .reveal-box {
+            position: relative;
+            overflow: hidden;
+          }
           
-          <div className="max-w-xl mx-auto font-sync text-xs md:text-sm tracking-widest uppercase flex justify-center items-center gap-3 h-6" id="hero-sub">
-            <span className="opacity-40">18 &bull;</span>
-            <div className="carousel-container min-w-[200px] text-left">
-              <div className="carousel-word" data-word="STUDENT"></div>
-              <div className="carousel-word" data-word="PROGRAMMER"></div>
-              <div className="carousel-word" data-word="UI/UX DESIGNER"></div>
-            </div>
+          .reveal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--neon-blue);
+            transform: scaleX(0);
+            transform-origin: left;
+            z-index: 10;
+          }
+
+          .parallax-text {
+            white-space: nowrap;
+            font-size: 15vw;
+            line-height: 1;
+            opacity: 0.05;
+            pointer-events: none;
+          }
+
+          .carousel-container {
+            position: relative;
+            height: 1.2em;
+            display: inline-block;
+            vertical-align: top;
+            overflow: hidden;
+          }
+          
+          .carousel-word {
+            position: absolute;
+            white-space: nowrap;
+            left: 0;
+            top: 0;
+            opacity: 0;
+          }
+
+          .char {
+            display: inline-block;
+            transform: translateY(100%);
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: scale(0.95);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+
+          .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out forwards;
+          }
+        `}</style>
+
+        <div id="canvas-container" ref={canvasRef}></div>
+
+        {/* Navigation */}
+        <nav className="fixed top-0 w-full p-6 md:p-10 flex justify-between items-center z-50">
+          <div className="font-sync text-xl tracking-tighter neon-glow">ELLEN_DEV</div>
+          <div className="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.3em] font-bold opacity-50">
+            <a href="#work" className="hover:opacity-100 transition-opacity">Artifacts</a>
+            <a href="#about" className="hover:opacity-100 transition-opacity">Philosophy</a>
+            <a href="#contact" className="hover:opacity-100 transition-opacity">Contact</a>
           </div>
-        </div>
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-30">
-          <span className="text-[10px] tracking-widest uppercase mb-2">Scroll</span>
-          <div className="w-[1px] h-12 bg-white origin-top" id="scroll-line"></div>
-        </div>
-      </section>
+          <div className="text-[10px] uppercase tracking-widest opacity-50">Available for 2024</div>
+        </nav>
 
-      {/* Marquee Parallax */}
-      <div className="py-20 overflow-hidden border-y border-white/5">
-        <div className="parallax-text font-sync" id="marquee" ref={marqueeRef}>
-          CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN • CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN •
-        </div>
-      </div>
-
-      {/* Work Section */}
-      <section id="work" className="px-[5vw] py-[10vh] min-h-screen">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-20">
-          <h2 className="font-sync text-4xl md:text-6xl uppercase">Selected<br/>Artifacts</h2>
-          <p className="max-w-xs opacity-40 text-sm mt-4 md:mt-0 italic">01 — 03 / A collection of high-end builds</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
-          <div className="project-item group cursor-pointer">
-            <div className="reveal-box aspect-[16/10] mb-6">
-              <div className="reveal-overlay"></div>
-              <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
-                <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">01_SYNTH_CORE</span>
+        {/* Hero */}
+        <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
+          <div className="text-center z-10 px-6">
+            <div className="overflow-hidden mb-2">
+              <span className="block text-[10px] tracking-[0.5em] uppercase opacity-0 font-sync" id="hero-top">Fullstack Creative</span>
+            </div>
+            <h1 className="font-sync text-6xl md:text-[9vw] leading-none mb-8 overflow-hidden" id="hero-title" ref={heroTitleRef}>
+              ELLEN
+            </h1>
+            
+            <div className="max-w-xl mx-auto font-sync text-xs md:text-sm tracking-widest uppercase flex justify-center items-center gap-3 h-6" id="hero-sub">
+              <span className="opacity-40">18 &bull;</span>
+              <div className="carousel-container min-w-[200px] text-left">
+                <div className="carousel-word" data-word="STUDENT"></div>
+                <div className="carousel-word" data-word="PROGRAMMER"></div>
+                <div className="carousel-word" data-word="UI/UX DESIGNER"></div>
               </div>
             </div>
-            <div className="flex justify-between items-start">
+          </div>
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-30">
+            <span className="text-[10px] tracking-widest uppercase mb-2">Scroll</span>
+            <div className="w-[1px] h-12 bg-white origin-top" id="scroll-line"></div>
+          </div>
+        </section>
+
+        {/* Marquee Parallax */}
+        <div className="py-20 overflow-hidden border-y border-white/5">
+          <div className="parallax-text font-sync" id="marquee" ref={marqueeRef}>
+            CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN • CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN •
+          </div>
+        </div>
+
+        {/* Work Section */}
+        <section id="work" className="px-[5vw] py-[10vh] min-h-screen">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-20">
+            <h2 className="font-sync text-4xl md:text-6xl uppercase">Selected<br/>Artifacts</h2>
+            <p className="max-w-xs opacity-40 text-sm mt-4 md:mt-0 italic">01 — 03 / A collection of high-end builds</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+            <div className="project-item group cursor-pointer">
+              <div className="reveal-box aspect-[16/10] mb-6">
+                <div className="reveal-overlay"></div>
+                <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+                  <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">01_SYNTH_CORE</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-sync text-lg">SynthCore Systems</h4>
+                  <p className="text-xs opacity-40 uppercase tracking-widest mt-1">WebGL / React / GSAP</p>
+                </div>
+                <span className="text-xs border border-white/20 rounded-full px-3 py-1">2024</span>
+              </div>
+            </div>
+
+            <div className="project-item group cursor-pointer pt-0 md:pt-40">
+              <div className="reveal-box aspect-[10/12] mb-6">
+                <div className="reveal-overlay"></div>
+                <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+                  <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">02_NEO_JAPAN</span>
+                </div>
+              </div>
               <div>
-                <h4 className="font-sync text-lg">SynthCore Systems</h4>
-                <p className="text-xs opacity-40 uppercase tracking-widest mt-1">WebGL / React / GSAP</p>
+                <h4 className="font-sync text-lg">Neo-Tokyo Interactive</h4>
+                <p className="text-xs opacity-40 uppercase tracking-widest mt-1">Three.js / Shader Material</p>
               </div>
-              <span className="text-xs border border-white/20 rounded-full px-3 py-1">2024</span>
             </div>
           </div>
+        </section>
 
-          <div className="project-item group cursor-pointer pt-0 md:pt-40">
-            <div className="reveal-box aspect-[10/12] mb-6">
-              <div className="reveal-overlay"></div>
-              <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
-                <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">02_NEO_JAPAN</span>
+        {/* About Section */}
+        <section id="about" className="px-[5vw] py-[10vh] bg-white/5 backdrop-blur-3xl">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+            <div className="space-y-8">
+              <h3 className="font-sync text-3xl md:text-5xl leading-tight">THE BLADE OF<br/><span className="text-cyan-400">PRECISION.</span></h3>
+              <p className="opacity-60 text-lg leading-relaxed">
+                I believe that performance is a feature, and motion is a language.
+                Every project is a duel against mediocrity.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="glass-panel p-6 rounded-xl">
+                  <div className="text-cyan-400 font-sync text-xl mb-2">99%</div>
+                  <div className="text-[10px] uppercase tracking-widest opacity-50">Lighthouse Score</div>
+                </div>
+                <div className="glass-panel p-6 rounded-xl">
+                  <div className="text-pink-500 font-sync text-xl mb-2">60fps</div>
+                  <div className="text-[10px] uppercase tracking-widest opacity-50">Fluid Animation</div>
+                </div>
+              </div>
+              
+              {/* More About Me Button */}
+              <button 
+                onClick={() => setShowAboutModal(true)}
+                className="group flex items-center space-x-3 text-sm uppercase tracking-widest hover:opacity-100 transition-all duration-300"
+              >
+                <span className="text-cyan-400 text-xl group-hover:rotate-90 transition-transform duration-300">●</span>
+                <span className="border-b border-white/20 group-hover:border-cyan-400 pb-1 transition-colors duration-300">
+                  More About Me
+                </span>
+                <span className="text-cyan-400 text-xl group-hover:translate-x-2 transition-transform duration-300">●</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="feature-card-alt p-8 border-l-2 border-cyan-400 glass-panel">
+                <h5 className="font-sync mb-2">Frontend Mastery</h5>
+                <p className="text-xs opacity-40">React, Next.js, Vue, TypeScript</p>
+              </div>
+              <div className="feature-card-alt p-8 border-l-2 border-pink-500 glass-panel">
+                <h5 className="font-sync mb-2">Creative Coding</h5>
+                <p className="text-xs opacity-40">Three.js, GLSL, GSAP, Canvas API</p>
+              </div>
+              <div className="feature-card-alt p-8 border-l-2 border-white glass-panel">
+                <h5 className="font-sync mb-2">Technical Strategy</h5>
+                <p className="text-xs opacity-40">Architecture design, CI/CD, Performance Optimization</p>
               </div>
             </div>
-            <div>
-              <h4 className="font-sync text-lg">Neo-Tokyo Interactive</h4>
-              <p className="text-xs opacity-40 uppercase tracking-widest mt-1">Three.js / Shader Material</p>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* About Section */}
-      <section id="about" className="px-[5vw] py-[10vh] bg-white/5 backdrop-blur-3xl">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
-          <div className="space-y-8">
-            <h3 className="font-sync text-3xl md:text-5xl leading-tight">THE BLADE OF<br/><span className="text-cyan-400">PRECISION.</span></h3>
-            <p className="opacity-60 text-lg leading-relaxed">
-              I believe that performance is a feature, and motion is a language.
-              Every project is a duel against mediocrity.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="glass-panel p-6 rounded-xl">
-                <div className="text-cyan-400 font-sync text-xl mb-2">99%</div>
-                <div className="text-[10px] uppercase tracking-widest opacity-50">Lighthouse Score</div>
-              </div>
-              <div className="glass-panel p-6 rounded-xl">
-                <div className="text-pink-500 font-sync text-xl mb-2">60fps</div>
-                <div className="text-[10px] uppercase tracking-widest opacity-50">Fluid Animation</div>
-              </div>
+        {/* Footer */}
+        <footer id="contact" className="px-[5vw] py-[10vh] text-center border-t border-white/10">
+          <div className="py-20">
+            <span className="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-6 block">Ready to collaborate?</span>
+            <h2 className="font-sync text-4xl md:text-8xl hover:text-cyan-400 transition-colors cursor-pointer mb-10">HIRE_ELLEN</h2>
+            <div className="flex justify-center space-x-8 text-[10px] tracking-widest uppercase opacity-50">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">LinkedIn</a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">GitHub</a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">Twitter</a>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div className="feature-card-alt p-8 border-l-2 border-cyan-400 glass-panel">
-              <h5 className="font-sync mb-2">Frontend Mastery</h5>
-              <p className="text-xs opacity-40">React, Next.js, Vue, TypeScript</p>
-            </div>
-            <div className="feature-card-alt p-8 border-l-2 border-pink-500 glass-panel">
-              <h5 className="font-sync mb-2">Creative Coding</h5>
-              <p className="text-xs opacity-40">Three.js, GLSL, GSAP, Canvas API</p>
-            </div>
-            <div className="feature-card-alt p-8 border-l-2 border-white glass-panel">
-              <h5 className="font-sync mb-2">Technical Strategy</h5>
-              <p className="text-xs opacity-40">Architecture design, CI/CD, Performance Optimization</p>
-            </div>
+          <div className="mt-20 pt-10 border-t border-white/5 flex justify-between text-[8px] uppercase tracking-[0.3em] opacity-30">
+            <span>© 2024 Ellen Studio</span>
+            <span>Design for the new era</span>
           </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="contact" className="px-[5vw] py-[10vh] text-center border-t border-white/10">
-        <div className="py-20">
-          <span className="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-6 block">Ready to collaborate?</span>
-          <h2 className="font-sync text-4xl md:text-8xl hover:text-cyan-400 transition-colors cursor-pointer mb-10">HIRE_ELLEN</h2>
-          <div className="flex justify-center space-x-8 text-[10px] tracking-widest uppercase opacity-50">
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">LinkedIn</a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">GitHub</a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">Twitter</a>
-          </div>
-        </div>
-        <div className="mt-20 pt-10 border-t border-white/5 flex justify-between text-[8px] uppercase tracking-[0.3em] opacity-30">
-          <span>© 2024 Ellen Studio</span>
-          <span>Design for the new era</span>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </>
   );
 };
 
