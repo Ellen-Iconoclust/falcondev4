@@ -10,20 +10,28 @@ const App = () => {
   const [showAboutModal, setShowAboutModal] = useState(false);
 
   useEffect(() => {
-    // Simulate loading progress
+    // Simulate loading progress with smoother increments
     let progress = 0;
     const interval = setInterval(() => {
-      progress += Math.random() * 10;
+      progress += Math.random() * 8;
       if (progress >= 100) {
         progress = 100;
         setLoadingProgress(100);
+        // Add a delay then animate loader up
         setTimeout(() => {
-          setLoading(false);
+          const loader = document.querySelector('.loading-screen');
+          if (loader) {
+            loader.style.transform = 'translateY(-100%)';
+            loader.style.transition = 'transform 0.8s cubic-bezier(0.87, 0, 0.13, 1)';
+          }
+          setTimeout(() => {
+            setLoading(false);
+          }, 800);
         }, 500);
         clearInterval(interval);
       }
       setLoadingProgress(Math.min(progress, 100));
-    }, 200);
+    }, 150);
 
     return () => clearInterval(interval);
   }, []);
@@ -63,7 +71,7 @@ const App = () => {
         }
         requestAnimationFrame(raf);
 
-        // THREE.JS WAVE SCENE - EXACTLY LIKE HTML
+        // THREE.JS WAVE SCENE
         const scene = new THREE.Scene();
         scene.background = null;
         
@@ -86,7 +94,7 @@ const App = () => {
           canvasRef.current.appendChild(renderer.domElement);
         }
 
-        // Create the wave plane - EXACT HTML SETTINGS
+        // Create the wave plane
         const geometry = new THREE.PlaneGeometry(120, 120, 100, 100);
         const material = new THREE.MeshBasicMaterial({ 
           color: 0x00f2ff, 
@@ -95,17 +103,14 @@ const App = () => {
           opacity: 0.1
         });
         const plane = new THREE.Mesh(geometry, material);
-        
-        // HTML SETTINGS - NO position change (default is 0)
-        plane.rotation.x = -Math.PI / 2.2; // Same rotation as HTML
-        
+        plane.rotation.x = -Math.PI / 2.2;
         scene.add(plane);
 
         let animationFrameId;
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
           
-          // Wave animation - HTML version
+          // Wave animation
           const time = Date.now() * 0.0004;
           const pos = plane.geometry.attributes.position.array;
           for (let i = 0; i < pos.length; i += 3) {
@@ -118,17 +123,17 @@ const App = () => {
         animate();
 
         // GSAP ANIMATIONS
-        // Hero Entrance
-        if (heroTitleRef.current) {
+        // Hero Entrance - only run if not loading
+        if (!loading && heroTitleRef.current) {
           const titleText = heroTitleRef.current.innerText;
           heroTitleRef.current.innerHTML = titleText.split('').map(char => `<span>${char}</span>`).join('');
+          
+          const tl = gsap.timeline();
+          tl.to('#hero-top', { opacity: 1, duration: 1 })
+            .to('#hero-title span', { y: 0, stagger: 0.1, duration: 1.5, ease: "expo.out" }, "-=0.5")
+            .from('#hero-sub', { opacity: 0, y: 10, duration: 1 }, "-=1")
+            .from('#scroll-line', { scaleY: 0, duration: 1 }, "-=0.5");
         }
-
-        const tl = gsap.timeline();
-        tl.to('#hero-top', { opacity: 1, duration: 1 })
-          .to('#hero-title span', { y: 0, stagger: 0.1, duration: 1.5, ease: "expo.out" }, "-=0.5")
-          .from('#hero-sub', { opacity: 0, y: 10, duration: 1 }, "-=1")
-          .from('#scroll-line', { scaleY: 0, duration: 1 }, "-=0.5");
 
         // Carousel Logic
         const words = document.querySelectorAll('.carousel-word');
@@ -241,62 +246,159 @@ const App = () => {
     initApp();
 
     return () => {};
-  }, []);
+  }, [loading]);
 
   return (
     <>
-      {/* Loading Screen */}
+      {/* Loading Screen - New Design */}
       {loading && (
-        <div className="fixed inset-0 bg-[#050505] z-[100] flex flex-col items-center justify-center">
-          <div className="font-sync text-8xl md:text-9xl text-cyan-400 mb-8 neon-glow">
-            {Math.floor(loadingProgress)}%
+        <div className="loading-screen fixed inset-0 bg-[#050505] z-[100] flex flex-col items-center justify-center will-change-transform">
+          <div className="relative">
+            {/* Animated circles */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 border border-cyan-400/20 rounded-full animate-ping"></div>
+              <div className="absolute w-24 h-24 border border-cyan-400/40 rounded-full animate-pulse"></div>
+            </div>
+            
+            {/* Percentage */}
+            <div className="relative z-10 font-sync text-7xl md:text-8xl text-cyan-400 mb-4 tracking-tighter">
+              {Math.floor(loadingProgress)}%
+            </div>
           </div>
-          <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+          
+          {/* Progress bar */}
+          <div className="w-48 h-[2px] bg-white/10 mt-12 overflow-hidden">
             <div 
-              className="h-full bg-cyan-400 rounded-full transition-all duration-300"
+              className="h-full bg-cyan-400 transition-all duration-300 ease-out"
               style={{ width: `${loadingProgress}%` }}
             ></div>
           </div>
-          <div className="mt-8 font-sync text-xs tracking-[0.3em] opacity-50">
-            LOADING EXPERIENCE
+          
+          {/* Loading text */}
+          <div className="mt-6 font-sync text-[8px] tracking-[0.5em] opacity-40">
+            INITIALIZING EXPERIENCE
           </div>
         </div>
       )}
 
-      {/* About Modal */}
+      {/* About Modal - Full Page Bento Grid */}
       {showAboutModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowAboutModal(false)}></div>
-          <div className="relative glass-panel max-w-2xl w-full p-8 md:p-12 rounded-2xl animate-fadeIn">
-            <button 
-              onClick={() => setShowAboutModal(false)}
-              className="absolute top-4 right-4 text-white/50 hover:text-white text-2xl"
-            >
-              ✕
-            </button>
-            <h3 className="font-sync text-3xl md:text-4xl mb-6">
-              <span className="text-cyan-400">●</span> MORE ABOUT ME
-            </h3>
-            <div className="space-y-4 text-white/80">
-              <p className="text-lg leading-relaxed">
-                I'm a 18-year-old creative developer with a passion for blending technology and art. 
-                My journey started with a curiosity for how things work, which evolved into a deep love 
-                for creating immersive digital experiences.
-              </p>
-              <p className="text-lg leading-relaxed">
-                I specialize in building performant web applications with smooth animations and 
-                engaging 3D visuals. Every line of code is a step toward pushing the boundaries 
-                of what's possible on the web.
-              </p>
-              <div className="grid grid-cols-2 gap-4 mt-8">
-                <div className="glass-panel p-4">
-                  <div className="text-cyan-400 font-sync text-xl">5+</div>
-                  <div className="text-xs opacity-50">Projects Completed</div>
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          {/* Background with blur */}
+          <div className="absolute inset-0 bg-[#050505] bg-opacity-95 backdrop-blur-xl"></div>
+          
+          {/* Close button */}
+          <button 
+            onClick={() => setShowAboutModal(false)}
+            className="fixed top-6 right-6 z-10 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-white/50 hover:text-white hover:border-cyan-400 transition-all duration-300 group"
+          >
+            <span className="text-2xl group-hover:rotate-90 transition-transform duration-300">✕</span>
+          </button>
+
+          {/* Content */}
+          <div className="relative z-10 min-h-screen px-[5vw] py-[10vh]">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="mb-16 text-center">
+                <span className="text-cyan-400 font-sync text-sm tracking-[0.3em]">● ABOUT ME ●</span>
+                <h2 className="font-sync text-5xl md:text-7xl mt-4 mb-6">BEHIND THE CODE</h2>
+                <div className="w-20 h-[2px] bg-cyan-400 mx-auto"></div>
+              </div>
+
+              {/* Bento Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Main Bio Card - Large */}
+                <div className="md:col-span-2 glass-panel p-8 md:p-10 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
+                  <div className="flex items-start gap-4 mb-6">
+                    <span className="text-cyan-400 text-2xl">●</span>
+                    <h3 className="font-sync text-2xl">THE JOURNEY</h3>
+                  </div>
+                  <p className="text-white/70 text-lg leading-relaxed mb-6">
+                    At 18, I've already spent 5 years immersed in the world of code. 
+                    What started as curiosity evolved into a passion for creating digital 
+                    experiences that blend performance with artistry.
+                  </p>
+                  <p className="text-white/70 text-lg leading-relaxed">
+                    I believe every line of code tells a story, and every animation has a purpose. 
+                    My work is a constant pursuit of that perfect balance between technical precision 
+                    and creative expression.
+                  </p>
                 </div>
-                <div className="glass-panel p-4">
-                  <div className="text-pink-500 font-sync text-xl">∞</div>
-                  <div className="text-xs opacity-50">Hours of Learning</div>
+
+                {/* Stats Card */}
+                <div className="glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
+                  <div className="flex items-start gap-4 mb-6">
+                    <span className="text-pink-500 text-2xl">●</span>
+                    <h3 className="font-sync text-2xl">STATS</h3>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <div className="text-4xl font-sync text-cyan-400 mb-2">5+</div>
+                      <div className="text-xs uppercase tracking-widest opacity-50">Projects Completed</div>
+                    </div>
+                    <div>
+                      <div className="text-4xl font-sync text-pink-500 mb-2">∞</div>
+                      <div className="text-xs uppercase tracking-widest opacity-50">Hours of Learning</div>
+                    </div>
+                    <div>
+                      <div className="text-4xl font-sync text-white mb-2">2024</div>
+                      <div className="text-xs uppercase tracking-widest opacity-50">Active Since</div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Skills Grid */}
+                <div className="glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
+                  <div className="flex items-start gap-4 mb-6">
+                    <span className="text-cyan-400 text-2xl">●</span>
+                    <h3 className="font-sync text-2xl">EXPERTISE</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="border-l-2 border-cyan-400 pl-4">
+                      <div className="font-sync mb-1">Frontend</div>
+                      <div className="text-xs opacity-40">React • Next.js • Vue</div>
+                    </div>
+                    <div className="border-l-2 border-pink-500 pl-4">
+                      <div className="font-sync mb-1">Creative</div>
+                      <div className="text-xs opacity-40">Three.js • GSAP • WebGL</div>
+                    </div>
+                    <div className="border-l-2 border-white pl-4">
+                      <div className="font-sync mb-1">Strategy</div>
+                      <div className="text-xs opacity-40">Architecture • Performance</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Philosophy Card */}
+                <div className="glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
+                  <div className="flex items-start gap-4 mb-6">
+                    <span className="text-pink-500 text-2xl">●</span>
+                    <h3 className="font-sync text-2xl">PHILOSOPHY</h3>
+                  </div>
+                  <p className="text-white/70 leading-relaxed">
+                    "Performance is a feature, motion is a language. Every project is a duel against mediocrity."
+                  </p>
+                </div>
+
+                {/* Tools Card */}
+                <div className="md:col-span-2 glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
+                  <div className="flex items-start gap-4 mb-6">
+                    <span className="text-cyan-400 text-2xl">●</span>
+                    <h3 className="font-sync text-2xl">TOOLCHAIN</h3>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {['React', 'Three.js', 'GSAP', 'TypeScript', 'Tailwind', 'Node.js', 'Figma', 'Webpack'].map((tool, i) => (
+                      <div key={i} className="text-center p-3 glass-panel rounded-lg hover:border-cyan-400 transition-all duration-300">
+                        <span className="text-xs uppercase tracking-wider">{tool}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer note */}
+              <div className="mt-12 text-center opacity-30 text-xs tracking-widest">
+                <span>● LET'S CREATE SOMETHING EXTRAORDINARY ●</span>
               </div>
             </div>
           </div>
@@ -318,6 +420,7 @@ const App = () => {
             margin: 0;
             padding: 0;
             background-color: #050505;
+            overflow-x: hidden;
           }
 
           #canvas-container {
@@ -402,19 +505,8 @@ const App = () => {
             transform: translateY(100%);
           }
 
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: scale(0.95);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-
-          .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out forwards;
+          .loading-screen {
+            transform: translateY(0);
           }
         `}</style>
 
