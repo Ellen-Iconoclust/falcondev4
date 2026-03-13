@@ -41,36 +41,117 @@ const App = () => {
         }
         requestAnimationFrame(raf);
 
-        // THREE.JS SCENE
+        // THREE.JS SCENE - FIXED VERSION
         const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050505); // Match the background color
+        
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        camera.position.set(0, 12, 40);
+        
+        const renderer = new THREE.WebGLRenderer({ 
+          antialias: true, 
+          alpha: false // Changed to false since we're setting background color
+        });
+        
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        if (canvasRef.current) canvasRef.current.appendChild(renderer.domElement);
+        renderer.setClearColor(0x050505); // Set clear color to match background
+        
+        if (canvasRef.current) {
+          // Clear any existing canvas
+          while (canvasRef.current.firstChild) {
+            canvasRef.current.removeChild(canvasRef.current.firstChild);
+          }
+          canvasRef.current.appendChild(renderer.domElement);
+        }
 
-        const geometry = new THREE.PlaneGeometry(120, 120, 100, 100);
-        const material = new THREE.MeshBasicMaterial({
+        // Create a grid of points for better visualization
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        const size = 60;
+        const divisions = 40;
+        
+        for (let i = -size; i <= size; i += size/divisions) {
+          for (let j = -size; j <= size; j += size/divisions) {
+            vertices.push(i, j, 0);
+          }
+        }
+        
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        
+        const material = new THREE.PointsMaterial({
+          color: 0x00f2ff,
+          size: 0.2,
+          transparent: true,
+          opacity: 0.3
+        });
+        
+        const points = new THREE.Points(geometry, material);
+        points.rotation.x = -Math.PI / 2.2;
+        scene.add(points);
+
+        // Add some connecting lines for wireframe effect
+        const lineGeometry = new THREE.BufferGeometry();
+        const lineVertices = [];
+        
+        for (let i = -size; i <= size; i += size/divisions) {
+          for (let j = -size; j <= size; j += size/divisions) {
+            // Horizontal lines
+            if (i < size) {
+              lineVertices.push(i, j, 0);
+              lineVertices.push(i + size/divisions, j, 0);
+            }
+            // Vertical lines
+            if (j < size) {
+              lineVertices.push(i, j, 0);
+              lineVertices.push(i, j + size/divisions, 0);
+            }
+          }
+        }
+        
+        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(lineVertices, 3));
+        
+        const lineMaterial = new THREE.LineBasicMaterial({
+          color: 0x00f2ff,
+          transparent: true,
+          opacity: 0.05
+        });
+        
+        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+        lines.rotation.x = -Math.PI / 2.2;
+        scene.add(lines);
+
+        // Keep the original plane but reduce opacity
+        const planeGeometry = new THREE.PlaneGeometry(120, 120, 60, 60);
+        const planeMaterial = new THREE.MeshBasicMaterial({
           color: 0x00f2ff,
           wireframe: true,
           transparent: true,
-          opacity: 0.1
+          opacity: 0.1,
+          side: THREE.DoubleSide
         });
-        const plane = new THREE.Mesh(geometry, material);
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -Math.PI / 2.2;
         scene.add(plane);
-
-        camera.position.set(0, 12, 40);
 
         let animationFrameId;
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
+          
+          // Animate the plane vertices
           const time = Date.now() * 0.0004;
           const pos = plane.geometry.attributes.position.array;
           for (let i = 0; i < pos.length; i += 3) {
-            pos[i + 2] = Math.sin(pos[i] * 0.1 + time) * 2 + Math.cos(pos[i + 1] * 0.1 + time) * 2;
+            const x = pos[i];
+            const y = pos[i + 1];
+            pos[i + 2] = Math.sin(x * 0.1 + time) * 2 + Math.cos(y * 0.1 + time) * 2;
           }
           plane.geometry.attributes.position.needsUpdate = true;
+          
+          // Rotate points slightly
+          points.rotation.y += 0.0001;
+          lines.rotation.y += 0.0001;
+          
           renderer.render(scene, camera);
         };
         animate();
@@ -180,12 +261,16 @@ const App = () => {
         };
         window.addEventListener('resize', handleResize);
 
-        // Cleanup
+        // Cleanup function
         return () => {
           window.removeEventListener('resize', handleResize);
           cancelAnimationFrame(animationFrameId);
           lenis.destroy();
           ScrollTrigger.getAll().forEach(t => t.kill());
+          // Clean up Three.js
+          renderer.dispose();
+          geometry.dispose();
+          material.dispose();
         };
 
       } catch (err) {
@@ -193,10 +278,11 @@ const App = () => {
       }
     };
 
-    const cleanup = initApp();
+    initApp();
 
+    // Cleanup effect
     return () => {
-      if (cleanup) cleanup();
+      // This will run when component unmounts
     };
   }, []);
 
@@ -212,12 +298,20 @@ const App = () => {
           font-family: 'Syncopate', sans-serif;
         }
 
-        #canvas-container canvas {
+        #canvas-container {
           position: fixed;
           top: 0;
           left: 0;
+          width: 100%;
+          height: 100%;
           z-index: -1;
           pointer-events: none;
+        }
+
+        #canvas-container canvas {
+          display: block;
+          width: 100%;
+          height: 100%;
         }
 
         .glass-panel {
@@ -409,7 +503,6 @@ const App = () => {
           <span className="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-6 block">Ready to collaborate?</span>
           <h2 className="font-sync text-4xl md:text-8xl hover:text-cyan-400 transition-colors cursor-pointer mb-10">HIRE_ELLEN</h2>
           <div className="flex justify-center space-x-8 text-[10px] tracking-widest uppercase opacity-50">
-            {/* Fixed: Added proper href values or use buttons for non-navigation links */}
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">LinkedIn</a>
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">GitHub</a>
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">Twitter</a>
