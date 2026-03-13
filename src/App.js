@@ -202,7 +202,7 @@ const App = () => {
 
   return (
     <div className="bg-[#050505] text-white font-sans selection:bg-cyan-500 selection:text-black">
-      <style jsx>{`
+      <style>{`
         :root {
           --neon-blue: #00f2ff;
           --neon-pink: #ff007a;
@@ -258,7 +258,6 @@ const App = () => {
           line-height: 1;
           opacity: 0.05;
           pointer-events: none;
-          font-family: 'Syncopate', sans-serif;
         }
 
         .carousel-container {
@@ -410,9 +409,10 @@ const App = () => {
           <span className="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-6 block">Ready to collaborate?</span>
           <h2 className="font-sync text-4xl md:text-8xl hover:text-cyan-400 transition-colors cursor-pointer mb-10">HIRE_ELLEN</h2>
           <div className="flex justify-center space-x-8 text-[10px] tracking-widest uppercase opacity-50">
-            <a href="#" className="hover:opacity-100">LinkedIn</a>
-            <a href="#" className="hover:opacity-100">GitHub</a>
-            <a href="#" className="hover:opacity-100">Twitter</a>
+            {/* Fixed: Added proper href values or use buttons for non-navigation links */}
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">LinkedIn</a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">GitHub</a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">Twitter</a>
           </div>
         </div>
         <div className="mt-20 pt-10 border-t border-white/5 flex justify-between text-[8px] uppercase tracking-[0.3em] opacity-30">
