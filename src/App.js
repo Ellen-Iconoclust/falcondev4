@@ -41,21 +41,25 @@ const App = () => {
         }
         requestAnimationFrame(raf);
 
-        // THREE.JS SCENE - FIXED VERSION
+        // THREE.JS SCENE - SIMPLIFIED FOR TESTING
+        console.log("Initializing Three.js scene");
+        
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050505); // Match the background color
+        // Don't set background color - let it be transparent
+        scene.background = null;
         
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 12, 40);
+        camera.position.set(0, 2, 10);
+        camera.lookAt(0, 0, 0);
         
         const renderer = new THREE.WebGLRenderer({ 
           antialias: true, 
-          alpha: false // Changed to false since we're setting background color
+          alpha: true // Keep alpha true for transparency
         });
         
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x050505); // Set clear color to match background
+        renderer.setClearColor(0x000000, 0); // Transparent clear color
         
         if (canvasRef.current) {
           // Clear any existing canvas
@@ -63,94 +67,60 @@ const App = () => {
             canvasRef.current.removeChild(canvasRef.current.firstChild);
           }
           canvasRef.current.appendChild(renderer.domElement);
+          console.log("Canvas appended to DOM");
         }
 
-        // Create a grid of points for better visualization
-        const geometry = new THREE.BufferGeometry();
-        const vertices = [];
-        const size = 60;
-        const divisions = 40;
+        // Add a simple cube to test visibility
+        const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
+        const cubeMaterial = new THREE.MeshBasicMaterial({ 
+          color: 0x00f2ff,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.5
+        });
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube.position.y = 1;
+        scene.add(cube);
+        console.log("Cube added to scene");
+
+        // Add a grid helper for reference
+        const gridHelper = new THREE.GridHelper(20, 20, 0x00f2ff, 0x3366ff);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
+
+        // Add some ambient particles
+        const particleCount = 1000;
+        const particleGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
         
-        for (let i = -size; i <= size; i += size/divisions) {
-          for (let j = -size; j <= size; j += size/divisions) {
-            vertices.push(i, j, 0);
-          }
+        for (let i = 0; i < particleCount * 3; i += 3) {
+          particlePositions[i] = (Math.random() - 0.5) * 30;
+          particlePositions[i + 1] = (Math.random() - 0.5) * 30;
+          particlePositions[i + 2] = (Math.random() - 0.5) * 30;
         }
         
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
         
-        const material = new THREE.PointsMaterial({
+        const particleMaterial = new THREE.PointsMaterial({
           color: 0x00f2ff,
-          size: 0.2,
+          size: 0.1,
           transparent: true,
           opacity: 0.3
         });
         
-        const points = new THREE.Points(geometry, material);
-        points.rotation.x = -Math.PI / 2.2;
-        scene.add(points);
-
-        // Add some connecting lines for wireframe effect
-        const lineGeometry = new THREE.BufferGeometry();
-        const lineVertices = [];
-        
-        for (let i = -size; i <= size; i += size/divisions) {
-          for (let j = -size; j <= size; j += size/divisions) {
-            // Horizontal lines
-            if (i < size) {
-              lineVertices.push(i, j, 0);
-              lineVertices.push(i + size/divisions, j, 0);
-            }
-            // Vertical lines
-            if (j < size) {
-              lineVertices.push(i, j, 0);
-              lineVertices.push(i, j + size/divisions, 0);
-            }
-          }
-        }
-        
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(lineVertices, 3));
-        
-        const lineMaterial = new THREE.LineBasicMaterial({
-          color: 0x00f2ff,
-          transparent: true,
-          opacity: 0.05
-        });
-        
-        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-        lines.rotation.x = -Math.PI / 2.2;
-        scene.add(lines);
-
-        // Keep the original plane but reduce opacity
-        const planeGeometry = new THREE.PlaneGeometry(120, 120, 60, 60);
-        const planeMaterial = new THREE.MeshBasicMaterial({
-          color: 0x00f2ff,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.1,
-          side: THREE.DoubleSide
-        });
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotation.x = -Math.PI / 2.2;
-        scene.add(plane);
+        const particles = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particles);
 
         let animationFrameId;
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
           
-          // Animate the plane vertices
-          const time = Date.now() * 0.0004;
-          const pos = plane.geometry.attributes.position.array;
-          for (let i = 0; i < pos.length; i += 3) {
-            const x = pos[i];
-            const y = pos[i + 1];
-            pos[i + 2] = Math.sin(x * 0.1 + time) * 2 + Math.cos(y * 0.1 + time) * 2;
-          }
-          plane.geometry.attributes.position.needsUpdate = true;
+          // Animate cube rotation
+          cube.rotation.x += 0.005;
+          cube.rotation.y += 0.01;
           
-          // Rotate points slightly
-          points.rotation.y += 0.0001;
-          lines.rotation.y += 0.0001;
+          // Animate particles
+          particles.rotation.y += 0.0005;
           
           renderer.render(scene, camera);
         };
@@ -243,8 +213,8 @@ const App = () => {
 
         // 3D Camera Dive
         gsap.to(camera.position, {
-          z: 10,
-          y: 5,
+          z: 5,
+          y: 2,
           scrollTrigger: {
             trigger: "body",
             start: "top top",
@@ -269,8 +239,6 @@ const App = () => {
           ScrollTrigger.getAll().forEach(t => t.kill());
           // Clean up Three.js
           renderer.dispose();
-          geometry.dispose();
-          material.dispose();
         };
 
       } catch (err) {
@@ -287,7 +255,7 @@ const App = () => {
   }, []);
 
   return (
-    <div className="bg-[#050505] text-white font-sans selection:bg-cyan-500 selection:text-black">
+    <div className="text-white font-sans selection:bg-cyan-500 selection:text-black">
       <style>{`
         :root {
           --neon-blue: #00f2ff;
@@ -298,13 +266,19 @@ const App = () => {
           font-family: 'Syncopate', sans-serif;
         }
 
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #050505;
+        }
+
         #canvas-container {
           position: fixed;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          z-index: -1;
+          z-index: 0;
           pointer-events: none;
         }
 
@@ -312,6 +286,12 @@ const App = () => {
           display: block;
           width: 100%;
           height: 100%;
+        }
+
+        /* Ensure content is above canvas */
+        nav, section, footer {
+          position: relative;
+          z-index: 1;
         }
 
         .glass-panel {
