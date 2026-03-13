@@ -76,7 +76,7 @@ const App = () => {
         const plane = new THREE.Mesh(geometry, material);
         
         // ONLY CHANGE: Move it down a bit
-        plane.position.y = -2; // Just a little down from original (was 0)
+        plane.position.y = -10; // Just a little down from original (was 0)
         plane.rotation.x = -Math.PI / 2.2; // Back to original rotation
         
         scene.add(plane);
