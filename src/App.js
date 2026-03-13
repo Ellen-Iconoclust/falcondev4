@@ -1,40 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 const App = () => {
   const canvasRef = useRef(null);
   const heroTitleRef = useRef(null);
   const marqueeRef = useRef(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [showAboutModal, setShowAboutModal] = useState(false);
-
-  useEffect(() => {
-    // Simulate loading progress with smoother increments
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 8;
-      if (progress >= 100) {
-        progress = 100;
-        setLoadingProgress(100);
-        // Add a delay then animate loader up
-        setTimeout(() => {
-          const loader = document.querySelector('.loading-screen');
-          if (loader) {
-            loader.style.transform = 'translateY(-100%)';
-            loader.style.transition = 'transform 0.8s cubic-bezier(0.87, 0, 0.13, 1)';
-          }
-          setTimeout(() => {
-            setLoading(false);
-          }, 800);
-        }, 500);
-        clearInterval(interval);
-      }
-      setLoadingProgress(Math.min(progress, 100));
-    }, 150);
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     // Helper to load external scripts
@@ -71,7 +41,7 @@ const App = () => {
         }
         requestAnimationFrame(raf);
 
-        // THREE.JS WAVE SCENE
+        // THREE.JS WAVE SCENE - EXACTLY LIKE HTML
         const scene = new THREE.Scene();
         scene.background = null;
         
@@ -94,7 +64,7 @@ const App = () => {
           canvasRef.current.appendChild(renderer.domElement);
         }
 
-        // Create the wave plane
+        // Create the wave plane - EXACT HTML SETTINGS
         const geometry = new THREE.PlaneGeometry(120, 120, 100, 100);
         const material = new THREE.MeshBasicMaterial({ 
           color: 0x00f2ff, 
@@ -103,14 +73,17 @@ const App = () => {
           opacity: 0.1
         });
         const plane = new THREE.Mesh(geometry, material);
-        plane.rotation.x = -Math.PI / 2.2;
+        
+        // HTML SETTINGS - NO position change (default is 0)
+        plane.rotation.x = -Math.PI / 2.2; // Same rotation as HTML
+        
         scene.add(plane);
 
         let animationFrameId;
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
           
-          // Wave animation
+          // Wave animation - HTML version
           const time = Date.now() * 0.0004;
           const pos = plane.geometry.attributes.position.array;
           for (let i = 0; i < pos.length; i += 3) {
@@ -123,17 +96,17 @@ const App = () => {
         animate();
 
         // GSAP ANIMATIONS
-        // Hero Entrance - only run if not loading
-        if (!loading && heroTitleRef.current) {
+        // Hero Entrance
+        if (heroTitleRef.current) {
           const titleText = heroTitleRef.current.innerText;
           heroTitleRef.current.innerHTML = titleText.split('').map(char => `<span>${char}</span>`).join('');
-          
-          const tl = gsap.timeline();
-          tl.to('#hero-top', { opacity: 1, duration: 1 })
-            .to('#hero-title span', { y: 0, stagger: 0.1, duration: 1.5, ease: "expo.out" }, "-=0.5")
-            .from('#hero-sub', { opacity: 0, y: 10, duration: 1 }, "-=1")
-            .from('#scroll-line', { scaleY: 0, duration: 1 }, "-=0.5");
         }
+
+        const tl = gsap.timeline();
+        tl.to('#hero-top', { opacity: 1, duration: 1 })
+          .to('#hero-title span', { y: 0, stagger: 0.1, duration: 1.5, ease: "expo.out" }, "-=0.5")
+          .from('#hero-sub', { opacity: 0, y: 10, duration: 1 }, "-=1")
+          .from('#scroll-line', { scaleY: 0, duration: 1 }, "-=0.5");
 
         // Carousel Logic
         const words = document.querySelectorAll('.carousel-word');
@@ -246,422 +219,248 @@ const App = () => {
     initApp();
 
     return () => {};
-  }, [loading]);
+  }, []);
 
   return (
-    <>
-      {/* Loading Screen - New Design */}
-      {loading && (
-        <div className="loading-screen fixed inset-0 bg-[#050505] z-[100] flex flex-col items-center justify-center will-change-transform">
-          <div className="relative">
-            {/* Animated circles */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 border border-cyan-400/20 rounded-full animate-ping"></div>
-              <div className="absolute w-24 h-24 border border-cyan-400/40 rounded-full animate-pulse"></div>
-            </div>
-            
-            {/* Percentage */}
-            <div className="relative z-10 font-sync text-7xl md:text-8xl text-cyan-400 mb-4 tracking-tighter">
-              {Math.floor(loadingProgress)}%
-            </div>
-          </div>
-          
-          {/* Progress bar */}
-          <div className="w-48 h-[2px] bg-white/10 mt-12 overflow-hidden">
-            <div 
-              className="h-full bg-cyan-400 transition-all duration-300 ease-out"
-              style={{ width: `${loadingProgress}%` }}
-            ></div>
-          </div>
-          
-          {/* Loading text */}
-          <div className="mt-6 font-sync text-[8px] tracking-[0.5em] opacity-40">
-            INITIALIZING EXPERIENCE
-          </div>
+    <div className="text-white font-sans selection:bg-cyan-500 selection:text-black">
+      <style>{`
+        :root {
+          --neon-blue: #00f2ff;
+          --neon-pink: #ff007a;
+        }
+
+        .font-sync {
+          font-family: 'Syncopate', sans-serif;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #050505;
+        }
+
+        #canvas-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        #canvas-container canvas {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+
+        nav, section, footer {
+          position: relative;
+          z-index: 1;
+        }
+
+        .glass-panel {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #hero-title span {
+          display: inline-block;
+          transform: translateY(110%);
+        }
+
+        .neon-glow {
+          text-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .reveal-box {
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .reveal-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: var(--neon-blue);
+          transform: scaleX(0);
+          transform-origin: left;
+          z-index: 10;
+        }
+
+        .parallax-text {
+          white-space: nowrap;
+          font-size: 15vw;
+          line-height: 1;
+          opacity: 0.05;
+          pointer-events: none;
+        }
+
+        .carousel-container {
+          position: relative;
+          height: 1.2em;
+          display: inline-block;
+          vertical-align: top;
+          overflow: hidden;
+        }
+        
+        .carousel-word {
+          position: absolute;
+          white-space: nowrap;
+          left: 0;
+          top: 0;
+          opacity: 0;
+        }
+
+        .char {
+          display: inline-block;
+          transform: translateY(100%);
+        }
+      `}</style>
+
+      <div id="canvas-container" ref={canvasRef}></div>
+
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full p-6 md:p-10 flex justify-between items-center z-50">
+        <div className="font-sync text-xl tracking-tighter neon-glow">ELLEN_DEV</div>
+        <div className="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.3em] font-bold opacity-50">
+          <a href="#work" className="hover:opacity-100 transition-opacity">Artifacts</a>
+          <a href="#about" className="hover:opacity-100 transition-opacity">Philosophy</a>
+          <a href="#contact" className="hover:opacity-100 transition-opacity">Contact</a>
         </div>
-      )}
+        <div className="text-[10px] uppercase tracking-widest opacity-50">Available for 2024</div>
+      </nav>
 
-      {/* About Modal - Full Page Bento Grid */}
-      {showAboutModal && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto">
-          {/* Background with blur */}
-          <div className="absolute inset-0 bg-[#050505] bg-opacity-95 backdrop-blur-xl"></div>
+      {/* Hero */}
+      <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
+        <div className="text-center z-10 px-6">
+          <div className="overflow-hidden mb-2">
+            <span className="block text-[10px] tracking-[0.5em] uppercase opacity-0 font-sync" id="hero-top">Fullstack Creative</span>
+          </div>
+          <h1 className="font-sync text-6xl md:text-[9vw] leading-none mb-8 overflow-hidden" id="hero-title" ref={heroTitleRef}>
+            ELLEN
+          </h1>
           
-          {/* Close button */}
-          <button 
-            onClick={() => setShowAboutModal(false)}
-            className="fixed top-6 right-6 z-10 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-white/50 hover:text-white hover:border-cyan-400 transition-all duration-300 group"
-          >
-            <span className="text-2xl group-hover:rotate-90 transition-transform duration-300">✕</span>
-          </button>
-
-          {/* Content */}
-          <div className="relative z-10 min-h-screen px-[5vw] py-[10vh]">
-            <div className="max-w-7xl mx-auto">
-              {/* Header */}
-              <div className="mb-16 text-center">
-                <span className="text-cyan-400 font-sync text-sm tracking-[0.3em]">● ABOUT ME ●</span>
-                <h2 className="font-sync text-5xl md:text-7xl mt-4 mb-6">BEHIND THE CODE</h2>
-                <div className="w-20 h-[2px] bg-cyan-400 mx-auto"></div>
-              </div>
-
-              {/* Bento Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Main Bio Card - Large */}
-                <div className="md:col-span-2 glass-panel p-8 md:p-10 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
-                  <div className="flex items-start gap-4 mb-6">
-                    <span className="text-cyan-400 text-2xl">●</span>
-                    <h3 className="font-sync text-2xl">THE JOURNEY</h3>
-                  </div>
-                  <p className="text-white/70 text-lg leading-relaxed mb-6">
-                    At 18, I've already spent 5 years immersed in the world of code. 
-                    What started as curiosity evolved into a passion for creating digital 
-                    experiences that blend performance with artistry.
-                  </p>
-                  <p className="text-white/70 text-lg leading-relaxed">
-                    I believe every line of code tells a story, and every animation has a purpose. 
-                    My work is a constant pursuit of that perfect balance between technical precision 
-                    and creative expression.
-                  </p>
-                </div>
-
-                {/* Stats Card */}
-                <div className="glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
-                  <div className="flex items-start gap-4 mb-6">
-                    <span className="text-pink-500 text-2xl">●</span>
-                    <h3 className="font-sync text-2xl">STATS</h3>
-                  </div>
-                  <div className="space-y-6">
-                    <div>
-                      <div className="text-4xl font-sync text-cyan-400 mb-2">5+</div>
-                      <div className="text-xs uppercase tracking-widest opacity-50">Projects Completed</div>
-                    </div>
-                    <div>
-                      <div className="text-4xl font-sync text-pink-500 mb-2">∞</div>
-                      <div className="text-xs uppercase tracking-widest opacity-50">Hours of Learning</div>
-                    </div>
-                    <div>
-                      <div className="text-4xl font-sync text-white mb-2">2024</div>
-                      <div className="text-xs uppercase tracking-widest opacity-50">Active Since</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Skills Grid */}
-                <div className="glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
-                  <div className="flex items-start gap-4 mb-6">
-                    <span className="text-cyan-400 text-2xl">●</span>
-                    <h3 className="font-sync text-2xl">EXPERTISE</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="border-l-2 border-cyan-400 pl-4">
-                      <div className="font-sync mb-1">Frontend</div>
-                      <div className="text-xs opacity-40">React • Next.js • Vue</div>
-                    </div>
-                    <div className="border-l-2 border-pink-500 pl-4">
-                      <div className="font-sync mb-1">Creative</div>
-                      <div className="text-xs opacity-40">Three.js • GSAP • WebGL</div>
-                    </div>
-                    <div className="border-l-2 border-white pl-4">
-                      <div className="font-sync mb-1">Strategy</div>
-                      <div className="text-xs opacity-40">Architecture • Performance</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Philosophy Card */}
-                <div className="glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
-                  <div className="flex items-start gap-4 mb-6">
-                    <span className="text-pink-500 text-2xl">●</span>
-                    <h3 className="font-sync text-2xl">PHILOSOPHY</h3>
-                  </div>
-                  <p className="text-white/70 leading-relaxed">
-                    "Performance is a feature, motion is a language. Every project is a duel against mediocrity."
-                  </p>
-                </div>
-
-                {/* Tools Card */}
-                <div className="md:col-span-2 glass-panel p-8 rounded-2xl hover:border-cyan-400/30 transition-all duration-500">
-                  <div className="flex items-start gap-4 mb-6">
-                    <span className="text-cyan-400 text-2xl">●</span>
-                    <h3 className="font-sync text-2xl">TOOLCHAIN</h3>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {['React', 'Three.js', 'GSAP', 'TypeScript', 'Tailwind', 'Node.js', 'Figma', 'Webpack'].map((tool, i) => (
-                      <div key={i} className="text-center p-3 glass-panel rounded-lg hover:border-cyan-400 transition-all duration-300">
-                        <span className="text-xs uppercase tracking-wider">{tool}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer note */}
-              <div className="mt-12 text-center opacity-30 text-xs tracking-widest">
-                <span>● LET'S CREATE SOMETHING EXTRAORDINARY ●</span>
-              </div>
+          <div className="max-w-xl mx-auto font-sync text-xs md:text-sm tracking-widest uppercase flex justify-center items-center gap-3 h-6" id="hero-sub">
+            <span className="opacity-40">18 &bull;</span>
+            <div className="carousel-container min-w-[200px] text-left">
+              <div className="carousel-word" data-word="STUDENT"></div>
+              <div className="carousel-word" data-word="PROGRAMMER"></div>
+              <div className="carousel-word" data-word="UI/UX DESIGNER"></div>
             </div>
           </div>
         </div>
-      )}
-
-      <div className="text-white font-sans selection:bg-cyan-500 selection:text-black">
-        <style>{`
-          :root {
-            --neon-blue: #00f2ff;
-            --neon-pink: #ff007a;
-          }
-
-          .font-sync {
-            font-family: 'Syncopate', sans-serif;
-          }
-
-          body {
-            margin: 0;
-            padding: 0;
-            background-color: #050505;
-            overflow-x: hidden;
-          }
-
-          #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-          }
-
-          #canvas-container canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-          }
-
-          nav, section, footer {
-            position: relative;
-            z-index: 1;
-          }
-
-          .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-          }
-
-          #hero-title span {
-            display: inline-block;
-            transform: translateY(110%);
-          }
-
-          .neon-glow {
-            text-shadow: 0 0 15px var(--neon-blue);
-          }
-
-          .reveal-box {
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .reveal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--neon-blue);
-            transform: scaleX(0);
-            transform-origin: left;
-            z-index: 10;
-          }
-
-          .parallax-text {
-            white-space: nowrap;
-            font-size: 15vw;
-            line-height: 1;
-            opacity: 0.05;
-            pointer-events: none;
-          }
-
-          .carousel-container {
-            position: relative;
-            height: 1.2em;
-            display: inline-block;
-            vertical-align: top;
-            overflow: hidden;
-          }
-          
-          .carousel-word {
-            position: absolute;
-            white-space: nowrap;
-            left: 0;
-            top: 0;
-            opacity: 0;
-          }
-
-          .char {
-            display: inline-block;
-            transform: translateY(100%);
-          }
-
-          .loading-screen {
-            transform: translateY(0);
-          }
-        `}</style>
-
-        <div id="canvas-container" ref={canvasRef}></div>
-
-        {/* Navigation */}
-        <nav className="fixed top-0 w-full p-6 md:p-10 flex justify-between items-center z-50">
-          <div className="font-sync text-xl tracking-tighter neon-glow">ELLEN_DEV</div>
-          <div className="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.3em] font-bold opacity-50">
-            <a href="#work" className="hover:opacity-100 transition-opacity">Artifacts</a>
-            <a href="#about" className="hover:opacity-100 transition-opacity">Philosophy</a>
-            <a href="#contact" className="hover:opacity-100 transition-opacity">Contact</a>
-          </div>
-          <div className="text-[10px] uppercase tracking-widest opacity-50">Available for 2024</div>
-        </nav>
-
-        {/* Hero */}
-        <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
-          <div className="text-center z-10 px-6">
-            <div className="overflow-hidden mb-2">
-              <span className="block text-[10px] tracking-[0.5em] uppercase opacity-0 font-sync" id="hero-top">Fullstack Creative</span>
-            </div>
-            <h1 className="font-sync text-6xl md:text-[9vw] leading-none mb-8 overflow-hidden" id="hero-title" ref={heroTitleRef}>
-              ELLEN
-            </h1>
-            
-            <div className="max-w-xl mx-auto font-sync text-xs md:text-sm tracking-widest uppercase flex justify-center items-center gap-3 h-6" id="hero-sub">
-              <span className="opacity-40">18 &bull;</span>
-              <div className="carousel-container min-w-[200px] text-left">
-                <div className="carousel-word" data-word="STUDENT"></div>
-                <div className="carousel-word" data-word="PROGRAMMER"></div>
-                <div className="carousel-word" data-word="UI/UX DESIGNER"></div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-30">
-            <span className="text-[10px] tracking-widest uppercase mb-2">Scroll</span>
-            <div className="w-[1px] h-12 bg-white origin-top" id="scroll-line"></div>
-          </div>
-        </section>
-
-        {/* Marquee Parallax */}
-        <div className="py-20 overflow-hidden border-y border-white/5">
-          <div className="parallax-text font-sync" id="marquee" ref={marqueeRef}>
-            CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN • CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN •
-          </div>
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-30">
+          <span className="text-[10px] tracking-widest uppercase mb-2">Scroll</span>
+          <div className="w-[1px] h-12 bg-white origin-top" id="scroll-line"></div>
         </div>
+      </section>
 
-        {/* Work Section */}
-        <section id="work" className="px-[5vw] py-[10vh] min-h-screen">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-20">
-            <h2 className="font-sync text-4xl md:text-6xl uppercase">Selected<br/>Artifacts</h2>
-            <p className="max-w-xs opacity-40 text-sm mt-4 md:mt-0 italic">01 — 03 / A collection of high-end builds</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
-            <div className="project-item group cursor-pointer">
-              <div className="reveal-box aspect-[16/10] mb-6">
-                <div className="reveal-overlay"></div>
-                <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
-                  <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">01_SYNTH_CORE</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-sync text-lg">SynthCore Systems</h4>
-                  <p className="text-xs opacity-40 uppercase tracking-widest mt-1">WebGL / React / GSAP</p>
-                </div>
-                <span className="text-xs border border-white/20 rounded-full px-3 py-1">2024</span>
-              </div>
-            </div>
-
-            <div className="project-item group cursor-pointer pt-0 md:pt-40">
-              <div className="reveal-box aspect-[10/12] mb-6">
-                <div className="reveal-overlay"></div>
-                <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
-                  <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">02_NEO_JAPAN</span>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-sync text-lg">Neo-Tokyo Interactive</h4>
-                <p className="text-xs opacity-40 uppercase tracking-widest mt-1">Three.js / Shader Material</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* About Section */}
-        <section id="about" className="px-[5vw] py-[10vh] bg-white/5 backdrop-blur-3xl">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
-            <div className="space-y-8">
-              <h3 className="font-sync text-3xl md:text-5xl leading-tight">THE BLADE OF<br/><span className="text-cyan-400">PRECISION.</span></h3>
-              <p className="opacity-60 text-lg leading-relaxed">
-                I believe that performance is a feature, and motion is a language.
-                Every project is a duel against mediocrity.
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="glass-panel p-6 rounded-xl">
-                  <div className="text-cyan-400 font-sync text-xl mb-2">99%</div>
-                  <div className="text-[10px] uppercase tracking-widest opacity-50">Lighthouse Score</div>
-                </div>
-                <div className="glass-panel p-6 rounded-xl">
-                  <div className="text-pink-500 font-sync text-xl mb-2">60fps</div>
-                  <div className="text-[10px] uppercase tracking-widest opacity-50">Fluid Animation</div>
-                </div>
-              </div>
-              
-              {/* More About Me Button */}
-              <button 
-                onClick={() => setShowAboutModal(true)}
-                className="group flex items-center space-x-3 text-sm uppercase tracking-widest hover:opacity-100 transition-all duration-300"
-              >
-                <span className="text-cyan-400 text-xl group-hover:rotate-90 transition-transform duration-300">●</span>
-                <span className="border-b border-white/20 group-hover:border-cyan-400 pb-1 transition-colors duration-300">
-                  More About Me
-                </span>
-                <span className="text-cyan-400 text-xl group-hover:translate-x-2 transition-transform duration-300">●</span>
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="feature-card-alt p-8 border-l-2 border-cyan-400 glass-panel">
-                <h5 className="font-sync mb-2">Frontend Mastery</h5>
-                <p className="text-xs opacity-40">React, Next.js, Vue, TypeScript</p>
-              </div>
-              <div className="feature-card-alt p-8 border-l-2 border-pink-500 glass-panel">
-                <h5 className="font-sync mb-2">Creative Coding</h5>
-                <p className="text-xs opacity-40">Three.js, GLSL, GSAP, Canvas API</p>
-              </div>
-              <div className="feature-card-alt p-8 border-l-2 border-white glass-panel">
-                <h5 className="font-sync mb-2">Technical Strategy</h5>
-                <p className="text-xs opacity-40">Architecture design, CI/CD, Performance Optimization</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer id="contact" className="px-[5vw] py-[10vh] text-center border-t border-white/10">
-          <div className="py-20">
-            <span className="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-6 block">Ready to collaborate?</span>
-            <h2 className="font-sync text-4xl md:text-8xl hover:text-cyan-400 transition-colors cursor-pointer mb-10">HIRE_ELLEN</h2>
-            <div className="flex justify-center space-x-8 text-[10px] tracking-widest uppercase opacity-50">
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">LinkedIn</a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">GitHub</a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">Twitter</a>
-            </div>
-          </div>
-          <div className="mt-20 pt-10 border-t border-white/5 flex justify-between text-[8px] uppercase tracking-[0.3em] opacity-30">
-            <span>© 2024 Ellen Studio</span>
-            <span>Design for the new era</span>
-          </div>
-        </footer>
+      {/* Marquee Parallax */}
+      <div className="py-20 overflow-hidden border-y border-white/5">
+        <div className="parallax-text font-sync" id="marquee" ref={marqueeRef}>
+          CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN • CODE SHOGUN • DIGITAL ARCHITECT • PIXEL RONIN •
+        </div>
       </div>
-    </>
+
+      {/* Work Section */}
+      <section id="work" className="px-[5vw] py-[10vh] min-h-screen">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-20">
+          <h2 className="font-sync text-4xl md:text-6xl uppercase">Selected<br/>Artifacts</h2>
+          <p className="max-w-xs opacity-40 text-sm mt-4 md:mt-0 italic">01 — 03 / A collection of high-end builds</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+          <div className="project-item group cursor-pointer">
+            <div className="reveal-box aspect-[16/10] mb-6">
+              <div className="reveal-overlay"></div>
+              <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+                <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">01_SYNTH_CORE</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-sync text-lg">SynthCore Systems</h4>
+                <p className="text-xs opacity-40 uppercase tracking-widest mt-1">WebGL / React / GSAP</p>
+              </div>
+              <span className="text-xs border border-white/20 rounded-full px-3 py-1">2024</span>
+            </div>
+          </div>
+
+          <div className="project-item group cursor-pointer pt-0 md:pt-40">
+            <div className="reveal-box aspect-[10/12] mb-6">
+              <div className="reveal-overlay"></div>
+              <div className="w-full h-full glass-panel flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+                <span className="font-sync opacity-20 group-hover:opacity-100 transition-opacity">02_NEO_JAPAN</span>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-sync text-lg">Neo-Tokyo Interactive</h4>
+              <p className="text-xs opacity-40 uppercase tracking-widest mt-1">Three.js / Shader Material</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="px-[5vw] py-[10vh] bg-white/5 backdrop-blur-3xl">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+          <div className="space-y-8">
+            <h3 className="font-sync text-3xl md:text-5xl leading-tight">THE BLADE OF<br/><span className="text-cyan-400">PRECISION.</span></h3>
+            <p className="opacity-60 text-lg leading-relaxed">
+              I believe that performance is a feature, and motion is a language.
+              Every project is a duel against mediocrity.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass-panel p-6 rounded-xl">
+                <div className="text-cyan-400 font-sync text-xl mb-2">99%</div>
+                <div className="text-[10px] uppercase tracking-widest opacity-50">Lighthouse Score</div>
+              </div>
+              <div className="glass-panel p-6 rounded-xl">
+                <div className="text-pink-500 font-sync text-xl mb-2">60fps</div>
+                <div className="text-[10px] uppercase tracking-widest opacity-50">Fluid Animation</div>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="feature-card-alt p-8 border-l-2 border-cyan-400 glass-panel">
+              <h5 className="font-sync mb-2">Frontend Mastery</h5>
+              <p className="text-xs opacity-40">React, Next.js, Vue, TypeScript</p>
+            </div>
+            <div className="feature-card-alt p-8 border-l-2 border-pink-500 glass-panel">
+              <h5 className="font-sync mb-2">Creative Coding</h5>
+              <p className="text-xs opacity-40">Three.js, GLSL, GSAP, Canvas API</p>
+            </div>
+            <div className="feature-card-alt p-8 border-l-2 border-white glass-panel">
+              <h5 className="font-sync mb-2">Technical Strategy</h5>
+              <p className="text-xs opacity-40">Architecture design, CI/CD, Performance Optimization</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer id="contact" className="px-[5vw] py-[10vh] text-center border-t border-white/10">
+        <div className="py-20">
+          <span className="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-6 block">Ready to collaborate?</span>
+          <h2 className="font-sync text-4xl md:text-8xl hover:text-cyan-400 transition-colors cursor-pointer mb-10">HIRE_ELLEN</h2>
+          <div className="flex justify-center space-x-8 text-[10px] tracking-widest uppercase opacity-50">
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">LinkedIn</a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">GitHub</a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-100">Twitter</a>
+          </div>
+        </div>
+        <div className="mt-20 pt-10 border-t border-white/5 flex justify-between text-[8px] uppercase tracking-[0.3em] opacity-30">
+          <span>© 2024 Ellen Studio</span>
+          <span>Design for the new era</span>
+        </div>
+      </footer>
+    </div>
   );
 };
 
-export default App;
+export default App; 
